@@ -1,6 +1,6 @@
 # ms spatial
 
-Calculate Spatial distance using methods:
+Calculate distance using methods:
  * Manhattan distance 
 
 ## Usage
