@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   version: "0.0.0"
   title: "ms spatial"
-  description: "Calculate Spatial distance"
+  description: "Calculate distance"
 paths:
   /api/points:
     get:
