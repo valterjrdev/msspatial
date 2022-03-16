@@ -16,3 +16,5 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    volumes:
+      - ./bin/data:/workspace/data:ro

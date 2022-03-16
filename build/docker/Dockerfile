@@ -17,5 +17,4 @@ RUN apk --no-cache add ca-certificates curl
 WORKDIR /workspace
 
 COPY --from=build /workspace/tmp/app .
-COPY --from=build /workspace/bin/data/* .
 CMD ["./app"]
