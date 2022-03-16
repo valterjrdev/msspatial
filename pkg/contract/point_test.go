@@ -7,7 +7,7 @@ import (
 )
 
 func TestPointCollection_Len(t *testing.T) {
-	input := PointCollection([]Point{
+	input := PointCollectionResponse([]PointResponse{
 		{
 			X:        10,
 			Y:        -3,
@@ -20,7 +20,7 @@ func TestPointCollection_Len(t *testing.T) {
 		},
 	})
 
-	expected := PointCollection([]Point{
+	expected := PointCollectionResponse([]PointResponse{
 		{
 			X:        10,
 			Y:        -3,
@@ -39,6 +39,6 @@ func TestPointCollection_Len(t *testing.T) {
 }
 
 func TestPoint_Validate(t *testing.T) {
-	point := Point{}
+	point := PointRequest{}
 	assert.EqualError(t, point.Validate(), "distance: cannot be blank; x: cannot be blank; y: cannot be blank.")
 }

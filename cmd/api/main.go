@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"bytes"
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	_ "ms/spatial/cmd/api/docs"
 	"ms/spatial/internal/api/handler"
-	"ms/spatial/pkg/contract"
+	"ms/spatial/pkg/persistence/repository"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,18 +25,15 @@ func main() {
 	server.Use(middleware.Recover())
 	server.Use(middleware.Gzip())
 
-	payload, err := ioutil.ReadFile(os.Getenv("API_POINTS_DATA"))
+	path := os.Getenv("API_POINTS_DATA")
+	payload, err := ioutil.ReadFile(path)
 	if err != nil {
 		server.Logger.Fatalf("ioutil.ReadFile failed with %s\n", err)
 	}
 
-	var points []contract.Point
-	if err = json.Unmarshal(payload, &points); err != nil {
-		server.Logger.Fatalf("json.Unmarshal failed with %s\n", err)
-	}
-
+	pointRepository := repository.NewPoint(server.Logger, bytes.NewReader(payload))
 	pointsHandler := handler.NewPoint(handler.PointOpts{
-		Points: points,
+		PointRepository: pointRepository,
 	})
 
 	server.GET("/docs/*", echoSwagger.WrapHandler)

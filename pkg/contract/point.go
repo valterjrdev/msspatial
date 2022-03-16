@@ -5,16 +5,22 @@ import (
 )
 
 type (
-	Point struct {
+	PointRequest struct {
 		X        int `json:"x" query:"x"`
 		Y        int `json:"y" query:"y"`
 		Distance int `json:"distance" query:"distance"`
 	}
 
-	PointCollection []Point
+	PointResponse struct {
+		X        int `json:"x"`
+		Y        int `json:"y"`
+		Distance int `json:"distance"`
+	}
+
+	PointCollectionResponse []PointResponse
 )
 
-func (a Point) Validate() error {
+func (a PointRequest) Validate() error {
 	return validation.ValidateStruct(
 		&a,
 		validation.Field(&a.X, validation.Required),
@@ -23,14 +29,14 @@ func (a Point) Validate() error {
 	)
 }
 
-func (p PointCollection) Len() int {
+func (p PointCollectionResponse) Len() int {
 	return len(p)
 }
 
-func (p PointCollection) Less(i, j int) bool {
+func (p PointCollectionResponse) Less(i, j int) bool {
 	return p[i].Distance < p[j].Distance
 }
 
-func (p PointCollection) Swap(i, j int) {
+func (p PointCollectionResponse) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
 }

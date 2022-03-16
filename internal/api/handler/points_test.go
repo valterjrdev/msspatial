@@ -5,7 +5,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
-	"ms/spatial/pkg/contract"
+	"ms/spatial/pkg/persistence/entity"
+	"ms/spatial/pkg/persistence/repository"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -13,10 +14,13 @@ import (
 )
 
 func TestHandlerPoints_Get(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	cases := []struct {
 		description string
 		input       map[string]string
-		points      []contract.Point
+		points      []*entity.Point
 		expected    string
 	}{
 		{
@@ -26,7 +30,7 @@ func TestHandlerPoints_Get(t *testing.T) {
 				"y":        "-3",
 				"distance": "20",
 			},
-			points: []contract.Point{
+			points: []*entity.Point{
 				{
 					X: 2,
 					Y: -8,
@@ -45,7 +49,7 @@ func TestHandlerPoints_Get(t *testing.T) {
 				"y":        "80",
 				"distance": "20",
 			},
-			points: []contract.Point{
+			points: []*entity.Point{
 				{
 					X: 2,
 					Y: -8,
@@ -70,7 +74,12 @@ func TestHandlerPoints_Get(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/?%s", PointGet, queryString.Encode()), nil)
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			h := NewPoint(PointOpts{Points: tt.points})
+
+			pointRepository := repository.NewMockPoints(ctrl)
+			pointRepository.EXPECT().FindAll().Return(tt.points, nil)
+			h := NewPoint(PointOpts{
+				PointRepository: pointRepository,
+			})
 			if assert.NoError(t, h.Get(server.NewContext(req, rec))) {
 				assert.Equal(t, http.StatusOK, rec.Code)
 				assert.JSONEq(t, tt.expected, rec.Body.String())
@@ -79,10 +88,30 @@ func TestHandlerPoints_Get(t *testing.T) {
 	}
 }
 
-func TestHandlerPoints_Validate_Error(t *testing.T) {
+func TestHandlerPoints_Get_FindAllPoints_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	server := echo.New()
+	queryString := make(url.Values)
+	queryString.Set("x", "1")
+	queryString.Set("y", "2")
+	queryString.Set("distance", "20")
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/?%s", PointGet, queryString.Encode()), nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+
+	pointRepository := repository.NewMockPoints(ctrl)
+	pointRepository.EXPECT().FindAll().Return(nil, repository.ErrPointLoadFile)
+	h := NewPoint(PointOpts{
+		PointRepository: pointRepository,
+	})
+
+	err := h.Get(server.NewContext(req, rec))
+	assert.EqualError(t, err, "code=400, message=failed to load points files")
+}
+
+func TestHandlerPoints_Validate_Error(t *testing.T) {
 	server := echo.New()
 	queryString := make(url.Values)
 	queryString.Set("x/", "")
@@ -91,7 +120,7 @@ func TestHandlerPoints_Validate_Error(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("%s/?%s", PointGet, queryString.Encode()), nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-	h := NewPoint(PointOpts{Points: nil})
+	h := NewPoint(PointOpts{PointRepository: nil})
 	err := h.Get(server.NewContext(req, rec))
 	assert.EqualError(t, err, "code=400, message=distance: cannot be blank; x: cannot be blank; y: cannot be blank.")
 }

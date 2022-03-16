@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"ms/spatial/pkg/contract"
 	"ms/spatial/pkg/mathc"
+	"ms/spatial/pkg/persistence/repository"
 	"net/http"
 	"sort"
 )
@@ -14,7 +15,7 @@ const (
 
 type (
 	PointOpts struct {
-		Points []contract.Point
+		PointRepository repository.Points
 	}
 	Point struct {
 		PointOpts
@@ -26,20 +27,25 @@ func NewPoint(opts PointOpts) *Point {
 }
 
 func (a *Point) Get(c echo.Context) error {
-	request := &contract.Point{}
+	request := &contract.PointRequest{}
 	_ = c.Bind(request)
 	if err := request.Validate(); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	points := make([]contract.Point, 0)
-	for _, point := range a.Points {
+	data, err := a.PointRepository.FindAll()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	pointResponse := make([]contract.PointResponse, 0)
+	for _, point := range data {
 		v1 := mathc.Vector{request.X, request.Y}
 		v2 := mathc.Vector{point.X, point.Y}
 
 		distance := mathc.ManhattanDistance2D(v1, v2)
 		if request.Distance >= distance {
-			points = append(points, contract.Point{
+			pointResponse = append(pointResponse, contract.PointResponse{
 				X:        point.X,
 				Y:        point.Y,
 				Distance: distance,
@@ -47,7 +53,7 @@ func (a *Point) Get(c echo.Context) error {
 		}
 	}
 
-	collection := contract.PointCollection(points)
+	collection := contract.PointCollectionResponse(pointResponse)
 	sort.Sort(collection)
 	return c.JSON(http.StatusOK, collection)
 }
