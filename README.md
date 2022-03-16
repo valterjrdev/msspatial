@@ -44,3 +44,8 @@ Lint
 ```bash
 make lint
 ```
+
+## Help
+
+Tools for debug and compare results:
+ * https://www.omnicalculator.com/math/manhattan-distance

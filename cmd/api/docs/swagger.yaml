@@ -1,0 +1,57 @@
+swagger: "2.0"
+info:
+  version: "0.0.0"
+  title: "ms cartesian"
+  description: "Calculate Spatial distance"
+paths:
+  /api/points:
+    get:
+      tags:
+        - "points"
+      summary: "Returns a list of points that are within distance from x,y, using the Manhattan distance method"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "x"
+          in: "query"
+          required: true
+          type: "integer"
+        - name: "y"
+          in: "query"
+          required: true
+          type: "integer"
+        - name: "distance"
+          in: "query"
+          required: true
+          type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: array
+            items:
+              type: object
+              $ref: "#/definitions/Points"
+        "400":
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: "Error"
+          schema:
+            $ref: "#/definitions/Error"
+
+definitions:
+  Error:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+  Points:
+    properties:
+      x:
+        type: "integer"
+      y:
+        type: "integer"
+      distance:
+        type: "integer"
